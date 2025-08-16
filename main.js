@@ -7,6 +7,21 @@ init();
 animate();
 
 function init() {
+
+   // 🔹 ขออนุญาต Motion / Orientation สำหรับ iOS
+  if (typeof DeviceMotionEvent !== 'undefined' && typeof DeviceMotionEvent.requestPermission === 'function') {
+    DeviceMotionEvent.requestPermission()
+      .then(permissionState => {
+        if (permissionState === 'granted') {
+          console.log('Device motion permission granted');
+        } else {
+          alert('Device motion permission denied');
+        }
+      })
+      .catch(console.error);
+  }
+
+
   scene = new THREE.Scene();
   camera = new THREE.PerspectiveCamera(70, window.innerWidth/window.innerHeight, 0.01, 20);
 
