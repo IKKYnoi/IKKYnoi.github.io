@@ -47,7 +47,7 @@ function init() {
   videoTexture.encoding = THREE.sRGBEncoding;
 
   // Sphere สำหรับลูกโลก
-  const geometry = new THREE.SphereGeometry(0.5, 64, 64);
+  const geometry = new THREE.SphereGeometry(0.35, 64, 64);
   const material = new THREE.MeshStandardMaterial({ map: videoTexture });
   globe = new THREE.Mesh(geometry, material);
   globe.position.set(0, 0, -1);
@@ -74,6 +74,7 @@ function animate() {
 }
 
 function render() {
-  if (globe) globe.rotation.y += 0.002; // หมุนลูกโลกช้า ๆ
+  if (globe) globe.rotation.y += 0.00; // หมุนลูกโลกช้า ๆ
   renderer.render(scene, camera);
 }
+
