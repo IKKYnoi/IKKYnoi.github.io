@@ -31,6 +31,10 @@ function init() {
   light.position.set(0.5, 1, 0.25);
   scene.add(light);
 
+  const loader = new THREE.TextureLoader();
+  const bgTexture = loader.load('Sky_box.png'); // ใส่ path รูปภาพ
+  scene.background = bgTexture;
+
   renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
   renderer.setSize(window.innerWidth, window.innerHeight);
   renderer.xr.enabled = true;
