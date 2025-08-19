@@ -5,6 +5,7 @@ let scene, camera, renderer, globe, video, videoTexture;
 let isDragging = false;
 let previousX = 0;
 let previousY = 0;
+let loader; // ใช้ร่วมกับ updateBackground
 
 init();
 animate();
@@ -31,9 +32,11 @@ function init() {
   light.position.set(0.5, 1, 0.25);
   scene.add(light);
 
-  const loader = new THREE.TextureLoader();
-  const bgTexture = loader.load('Sky_box.png'); // ใส่ path รูปภาพ
-  scene.background = bgTexture;
+  // 🔹 โหลดพื้นหลังตาม orientation
+  loader = new THREE.TextureLoader();
+  updateBackground(); // เรียกครั้งแรก
+  window.addEventListener('resize', updateBackground);
+  window.addEventListener('orientationchange', updateBackground);
 
   renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
   renderer.setSize(window.innerWidth, window.innerHeight);
@@ -47,10 +50,22 @@ function init() {
   video.src = 'Pangaea_Texture_VDO_Reverse_30.mp4';
   video.loop = true;
   video.muted = true;
-  video.play();
+  video.playsInline = true;   // ✅ สำคัญมากสำหรับ iPhone
+  video.autoplay = true;      // ✅ เผื่อ browser รองรับ autoplay
 
-  videoTexture = new THREE.VideoTexture(video);
-  videoTexture.encoding = THREE.sRGBEncoding;
+  // Safari iPhone: ต้องรอให้ video เริ่ม play สำเร็จก่อนค่อยสร้าง texture
+  video.play().then(() => {
+    videoTexture = new THREE.VideoTexture(video);
+    videoTexture.encoding = THREE.sRGBEncoding;
+    videoTexture.needsUpdate = true;
+
+    if (globe) {
+      globe.material.map = videoTexture;
+      globe.material.needsUpdate = true;
+    }
+  }).catch((err) => {
+    console.warn("Video play() failed:", err);
+  });
 
   // Sphere สำหรับลูกโลก
   const geometry = new THREE.SphereGeometry(0.35, 64, 64);
@@ -97,6 +112,18 @@ function init() {
       globe.rotation.x = Math.max(-Math.PI/2, Math.min(Math.PI/2, globe.rotation.x)); // จำกัดหมุนไม่เกิน 90°
     }
   });
+}
+
+// ✅ ฟังก์ชันเปลี่ยนพื้นหลัง
+function updateBackground() {
+  if (!loader) return;
+  if (window.innerHeight > window.innerWidth) {
+    // 📱 แนวตั้ง
+    scene.background = loader.load('Sky_box_portrait.png');
+  } else {
+    // 💻 แนวนอน
+    scene.background = loader.load('Sky_box_landscape.png');
+  }
 }
 
 function animate() {
