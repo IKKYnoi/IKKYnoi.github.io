@@ -5,24 +5,15 @@ let scene, camera, renderer, globe, video, videoTexture;
 let isDragging = false;
 let previousX = 0;
 let previousY = 0;
-let loader; // ใช้ร่วมกับ updateBackground
+let loader;
 
 init();
 animate();
 
 function init() {
-
-  // 🔹 ขออนุญาต Motion / Orientation สำหรับ iOS
+  // Motion Permission (iOS)
   if (typeof DeviceMotionEvent !== 'undefined' && typeof DeviceMotionEvent.requestPermission === 'function') {
-    DeviceMotionEvent.requestPermission()
-      .then(permissionState => {
-        if (permissionState === 'granted') {
-          console.log('Device motion permission granted');
-        } else {
-          alert('Device motion permission denied');
-        }
-      })
-      .catch(console.error);
+    DeviceMotionEvent.requestPermission().catch(console.error);
   }
 
   scene = new THREE.Scene();
@@ -32,9 +23,8 @@ function init() {
   light.position.set(0.5, 1, 0.25);
   scene.add(light);
 
-  // 🔹 โหลดพื้นหลังตาม orientation
   loader = new THREE.TextureLoader();
-  updateBackground(); // เรียกครั้งแรก
+  updateBackground();
   window.addEventListener('resize', updateBackground);
   window.addEventListener('orientationchange', updateBackground);
 
@@ -45,34 +35,33 @@ function init() {
 
   document.body.appendChild(ARButton.createButton(renderer, { requiredFeatures: ['hit-test'] }));
 
-  // Video
+  // Video element
   video = document.createElement('video');
   video.src = 'Pangaea_Texture_VDO_Reverse_30.mp4';
   video.loop = true;
-  video.muted = true;
-  video.playsInline = true;   // ✅ สำคัญมากสำหรับ iPhone
-  video.autoplay = true;      // ✅ เผื่อ browser รองรับ autoplay
+  video.muted = true;       // ✅ autoplay ต้อง muted
+  video.playsInline = true; // ✅ iOS ต้องการ
+  videoTexture = new THREE.VideoTexture(video);
+  videoTexture.encoding = THREE.sRGBEncoding;
 
-  // Safari iPhone: ต้องรอให้ video เริ่ม play สำเร็จก่อนค่อยสร้าง texture
-  video.play().then(() => {
-    videoTexture = new THREE.VideoTexture(video);
-    videoTexture.encoding = THREE.sRGBEncoding;
-    videoTexture.needsUpdate = true;
-
-    if (globe) {
-      globe.material.map = videoTexture;
-      globe.material.needsUpdate = true;
-    }
-  }).catch((err) => {
-    console.warn("Video play() failed:", err);
-  });
-
-  // Sphere สำหรับลูกโลก
+  // Sphere globe
   const geometry = new THREE.SphereGeometry(0.35, 64, 64);
   const material = new THREE.MeshStandardMaterial({ map: videoTexture });
   globe = new THREE.Mesh(geometry, material);
   globe.position.set(0, 0, -1);
   scene.add(globe);
+
+  // 🔹 กดปุ่ม Start ถึงจะเล่นวิดีโอ
+  const startButton = document.getElementById('startButton');
+  startButton.addEventListener('click', async () => {
+    try {
+      await video.play();
+      startButton.style.display = 'none'; // ซ่อนปุ่มหลังเริ่มเล่น
+    } catch (err) {
+      console.warn("Video play failed:", err);
+      alert("ไม่สามารถเล่นวิดีโอได้ ลองกดอีกครั้ง");
+    }
+  });
 
   window.addEventListener('resize', () => {
     camera.aspect = window.innerWidth/window.innerHeight;
@@ -80,6 +69,7 @@ function init() {
     renderer.setSize(window.innerWidth, window.innerHeight);
   });
 
+  // Lights
   const hemiLight = new THREE.HemisphereLight(0xffffff, 0x444444, 1.2);
   hemiLight.position.set(0, 20, 0);
   scene.add(hemiLight);
@@ -88,7 +78,7 @@ function init() {
   dirLight.position.set(5, 10, 7.5);
   scene.add(dirLight);
 
-  // —— เพิ่มฟังก์ชันลากหมุนลูกโลก ——
+  // Drag control
   renderer.domElement.addEventListener('pointerdown', (event) => {
     isDragging = true;
     previousX = event.clientX;
@@ -107,23 +97,18 @@ function init() {
     previousY = event.clientY;
 
     if (globe) {
-      globe.rotation.y += deltaX * 0.005; // หมุนซ้ายขวา
-      globe.rotation.x += deltaY * 0.005; // หมุนขึ้นลง
-      globe.rotation.x = Math.max(-Math.PI/2, Math.min(Math.PI/2, globe.rotation.x)); // จำกัดหมุนไม่เกิน 90°
+      globe.rotation.y += deltaX * 0.005;
+      globe.rotation.x += deltaY * 0.005;
+      globe.rotation.x = Math.max(-Math.PI/2, Math.min(Math.PI/2, globe.rotation.x));
     }
   });
 }
 
-// ✅ ฟังก์ชันเปลี่ยนพื้นหลัง
 function updateBackground() {
   if (!loader) return;
-  if (window.innerHeight > window.innerWidth) {
-    // 📱 แนวตั้ง
-    scene.background = loader.load('Sky_box_portrait.png');
-  } else {
-    // 💻 แนวนอน
-    scene.background = loader.load('Sky_box_landscape.png');
-  }
+  scene.background = (window.innerHeight > window.innerWidth)
+    ? loader.load('Sky_box_portrait.png')
+    : loader.load('Sky_box_landscape.png');
 }
 
 function animate() {
