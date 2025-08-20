@@ -2,16 +2,51 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>{AR_Pangaea}</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1"> <!-- เพิ่มตรงนี้ -->
+  <title>{AR Pangaea}</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
   <style>
     body { margin: 0; overflow: hidden; }
     canvas { display: block; }
+
+    /* ปุ่มวงกลม */
+    #startButton {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 80px;
+      height: 80px;
+      border-radius: 50%;     /* ทำให้เป็นวงกลม */
+      background: #007aff;
+      border: none;
+      cursor: pointer;
+      z-index: 10;
+      display: flex;          /* จัดวางสามเหลี่ยมให้อยู่กลาง */
+      align-items: center;
+      justify-content: center;
+    }
+
+    /* สามเหลี่ยม (play icon) */
+    #startButton::before {
+      content: "";
+      display: block;
+      width: 0;
+      height: 0;
+      border-left: 24px solid white;  /* ด้านซ้ายคือสี */
+      border-top: 14px solid transparent;
+      border-bottom: 14px solid transparent;
+      margin-left: 5px; /* ✅ ดันเข้ามาตรงกลาง */
+    }
+
+    /* เอฟเฟกต์ hover เล็กน้อย */
+    #startButton:hover {
+      background: #005bb5;
+      transform: translate(-50%, -50%) scale(1.1);
+    }
   </style>
 </head>
 <body>
+  <button id="startButton"></button>
   <script type="module" src="main.js"></script>
 </body>
 </html>
-
-
